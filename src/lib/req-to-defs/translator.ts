@@ -1,6 +1,5 @@
 import { JSONParser } from '@streamparser/json';
-import { zodResponseFormat } from 'openai/helpers/zod.mjs';
-import type { ChatCompletionMessageParam } from 'openai/resources/index.mjs';
+import { zodTextFormat } from 'openai/helpers/zod.mjs';
 import z from 'zod';
 
 import { calculatePromptCost, client, commonParams } from '$lib/gpt';
@@ -32,21 +31,19 @@ export async function translateRequirementsToDefinitions(
 	request: string,
 	onStream?: (result: TranslatedRequestDefinitions) => void
 ): Promise<TranslateResults> {
-	const messages: ChatCompletionMessageParam[] = [
+	const input = [
 		{
-			role: 'system',
+			role: 'system' as const,
 			content: `以下システムに対して、要求に基づき要件定義してください。\nシステムの解説:\n${systemDesc}`
 		},
-		{ role: 'user', content: request }
+		{ role: 'user' as const, content: request }
 	];
-	const response_format = zodResponseFormat(zTranslatedRequestDefinitions, 'definitions');
+	const textFormat = zodTextFormat(zTranslatedRequestDefinitions, 'definitions');
 	if (onStream) {
-		const stream = await client.beta.chat.completions.stream({
+		const stream = await client.responses.stream({
 			...commonParams,
-			messages,
-			response_format,
-			stream: true,
-			stream_options: { include_usage: true }
+			input,
+			text: { format: textFormat }
 		});
 		const jsonParser = new JSONParser({
 			emitPartialTokens: true,
@@ -62,23 +59,23 @@ export async function translateRequirementsToDefinitions(
 			}
 			onStream(partialData);
 		};
-		for await (const chunk of stream) {
-			jsonParser.write(chunk.choices[0]?.delta.content ?? '');
-		}
-		const completion = await stream.finalChatCompletion();
+		stream.on('response.output_text.delta', (event) => {
+			jsonParser.write(event.delta);
+		});
+		const response = await stream.finalResponse();
 		return {
-			price: calculatePromptCost(completion.usage),
-			definitions: completion.choices[0].message.parsed
+			price: calculatePromptCost(response.usage as any),
+			definitions: response.output_parsed
 		};
 	} else {
-		const completion = await client.beta.chat.completions.parse({
+		const response = await client.responses.parse({
 			...commonParams,
-			messages,
-			response_format
+			input,
+			text: { format: textFormat }
 		});
 		return {
-			price: calculatePromptCost(completion.usage),
-			definitions: completion.choices[0].message.parsed
+			price: calculatePromptCost(response.usage as any),
+			definitions: response.output_parsed
 		};
 	}
 }
