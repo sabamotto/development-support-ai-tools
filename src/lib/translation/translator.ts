@@ -1,6 +1,5 @@
 import { JSONParser } from '@streamparser/json';
-import { zodResponseFormat } from 'openai/helpers/zod.mjs';
-import type { ChatCompletionMessageParam } from 'openai/resources/index.mjs';
+import { zodTextFormat } from 'openai/helpers/zod.mjs';
 import z from 'zod';
 
 import { calculatePromptCost, client, commonParams } from '$lib/gpt';
@@ -45,19 +44,17 @@ export async function translate(
 		(instruction
 			? `Please follow the instructions below to translate user message ${fromAndInto}:\n${instruction}`
 			: `Please translate the user message ${fromAndInto}.`);
-	const messages: ChatCompletionMessageParam[] = [
-		{ role: 'system', content: sysPrompt },
-		{ role: 'user', content: sourceText }
+	const input = [
+		{ role: 'system' as const, content: sysPrompt },
+		{ role: 'user' as const, content: sourceText }
 	];
-	const response_format = zodResponseFormat(zTranslateData, 'translated');
+	const textFormat = zodTextFormat(zTranslateData, 'translated');
 
 	if (onStream) {
-		const stream = await client.chat.completions.stream({
+		const stream = await client.responses.stream({
 			...commonParams,
-			messages,
-			response_format,
-			stream: true,
-			stream_options: { include_usage: true }
+			input,
+			text: { format: textFormat }
 		});
 		const jsonParser = new JSONParser({
 			emitPartialTokens: true,
@@ -73,23 +70,23 @@ export async function translate(
 			}
 			onStream(partialData);
 		};
-		for await (const chunk of stream) {
-			jsonParser.write(chunk.choices[0]?.delta.content ?? '');
-		}
-		const completion = await stream.finalChatCompletion();
+		stream.on('response.output_text.delta', (event) => {
+			jsonParser.write(event.delta);
+		});
+		const response = await stream.finalResponse();
 		return {
-			price: calculatePromptCost(completion.usage),
-			translated: completion.choices[0].message.parsed
+			price: calculatePromptCost(response.usage as any),
+			translated: response.output_parsed
 		};
 	} else {
-		const completion = await client.chat.completions.parse({
+		const response = await client.responses.parse({
 			...commonParams,
-			messages,
-			response_format
+			input,
+			text: { format: textFormat }
 		});
 		return {
-			price: calculatePromptCost(completion.usage),
-			translated: completion.choices[0].message.parsed
+			price: calculatePromptCost(response.usage as any),
+			translated: response.output_parsed
 		};
 	}
 }

@@ -21,7 +21,9 @@ export const commonParams = {
 	model: (dev ? 'gpt-5.1-nano' : 'gpt-5.1-mini') as ModelName,
 	temperature: 0.5, // 0.0-(1.0)-2.0
 	top_p: 1.0, // 0.0-(1.0)
-	reasoning_effort: 'low' as 'low' | 'medium' | 'high' // minimum = low
+	reasoning: {
+		effort: 'none' as 'none' | 'low' | 'medium' | 'high' // GPT-5.1: none=最小(推論なし)
+	}
 };
 
 const costsIn1MTokens = {
