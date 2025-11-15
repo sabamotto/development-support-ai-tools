@@ -41,7 +41,7 @@ export async function translateRequirementsToDefinitions(
 	];
 	const response_format = zodResponseFormat(zTranslatedRequestDefinitions, 'definitions');
 	if (onStream) {
-		const stream = await client.beta.chat.completions.stream({
+		const stream = await client.chat.completions.stream({
 			...commonParams,
 			messages,
 			response_format,
@@ -71,7 +71,7 @@ export async function translateRequirementsToDefinitions(
 			definitions: completion.choices[0].message.parsed
 		};
 	} else {
-		const completion = await client.beta.chat.completions.parse({
+		const completion = await client.chat.completions.parse({
 			...commonParams,
 			messages,
 			response_format

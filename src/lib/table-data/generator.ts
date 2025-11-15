@@ -24,7 +24,7 @@ export async function generateTableData(
 		data: z.array(convert(definitions))
 	});
 	if (onStream) {
-		const stream = await client.beta.chat.completions.stream({
+		const stream = await client.chat.completions.stream({
 			...commonParams,
 			messages: [
 				{
@@ -60,7 +60,7 @@ export async function generateTableData(
 			table: completion.choices[0].message.parsed
 		};
 	} else {
-		const completion = await client.beta.chat.completions.parse({
+		const completion = await client.chat.completions.parse({
 			...commonParams,
 			messages: [
 				{

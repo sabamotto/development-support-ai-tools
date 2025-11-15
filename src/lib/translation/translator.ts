@@ -52,7 +52,7 @@ export async function translate(
 	const response_format = zodResponseFormat(zTranslateData, 'translated');
 
 	if (onStream) {
-		const stream = await client.beta.chat.completions.stream({
+		const stream = await client.chat.completions.stream({
 			...commonParams,
 			messages,
 			response_format,
@@ -82,7 +82,7 @@ export async function translate(
 			translated: completion.choices[0].message.parsed
 		};
 	} else {
-		const completion = await client.beta.chat.completions.parse({
+		const completion = await client.chat.completions.parse({
 			...commonParams,
 			messages,
 			response_format

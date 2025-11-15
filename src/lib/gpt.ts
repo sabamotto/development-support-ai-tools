@@ -9,36 +9,37 @@ export const client = new OpenAI({
 	dangerouslyAllowBrowser: true
 });
 
-export type ModelName = 'gpt-4.1' | 'gpt-4.1-mini' | 'gpt-4.1-nano' | 'gpt-4o' | 'gpt-4o-mini';
+export type ModelName = 'gpt-5.1' | 'gpt-5.1-mini' | 'gpt-5.1-nano' | 'gpt-4o' | 'gpt-4o-mini';
 export const modelList = [
-	{ displayName: 'GPT-4.1 (最高性能)', model: 'gpt-4.1' },
-	{ displayName: 'GPT-4.1 mini (高性能かつ低コスト)', model: 'gpt-4.1-mini' },
-	{ displayName: 'GPT-4.1 nano (最安だが低性能)', model: 'gpt-4.1-nano' },
+	{ displayName: 'GPT-5.1 (最高性能)', model: 'gpt-5.1' },
+	{ displayName: 'GPT-5.1 mini (高性能かつ低コスト)', model: 'gpt-5.1-mini' },
+	{ displayName: 'GPT-5.1 nano (最安だが低性能)', model: 'gpt-5.1-nano' },
 	{ displayName: 'GPT-4o (レガシー)', model: 'gpt-4o' },
 	{ displayName: 'GPT-4o mini (レガシー)', model: 'gpt-4o-mini' }
 ] as { displayName: string; model: ModelName }[];
 export const commonParams = {
-	model: (dev ? 'gpt-4.1-nano' : 'gpt-4.1-mini') as ModelName,
+	model: (dev ? 'gpt-5.1-nano' : 'gpt-5.1-mini') as ModelName,
 	temperature: 0.5, // 0.0-(1.0)-2.0
-	top_p: 1.0 // 0.0-(1.0)
+	top_p: 1.0, // 0.0-(1.0)
+	reasoning_effort: 'low' as 'low' | 'medium' | 'high' // minimum = low
 };
 
 const costsIn1MTokens = {
-	'gpt-4.1': {
+	'gpt-5.1': {
 		inputText: 2.0,
 		inputCached: 0.5,
 		inputAudio: 0.0,
 		outputText: 8.0,
 		outputAudio: 0.0
 	},
-	'gpt-4.1-mini': {
+	'gpt-5.1-mini': {
 		inputText: 0.4,
 		inputCached: 0.1,
 		inputAudio: 0.0,
 		outputText: 1.6,
 		outputAudio: 0.0
 	},
-	'gpt-4.1-nano': {
+	'gpt-5.1-nano': {
 		inputText: 0.1,
 		inputCached: 0.025,
 		inputAudio: 0.0,
